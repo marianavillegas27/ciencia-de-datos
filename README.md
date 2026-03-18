@@ -1,7 +1,7 @@
 # Parcial 1 - Ciencia de Datos
 
 **Estudiante:** Mariana Villegas Alzate
-**Curso:** Ciencia de Datos 2026-1 (Universidad Icesi)
+**Curso:** Ciencia de Datos 2026-1 ( Icesi)
 
 ## Descripción del Proyecto
 
