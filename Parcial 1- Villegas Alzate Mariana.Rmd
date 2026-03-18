@@ -1,0 +1,415 @@
+---
+title: "Informe 1/ Parcial 1"
+author:
+  name: '**Estudiante:**  Mariana Villegas Alzate <br> '
+  affiliation: "Universidad Icesi-Ciencia de datos 2026-1"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: cerulean
+    code_folding: hide
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    collapsed: false
+    smooth_scroll: true
+    number_sections: false
+    css: STYLESS.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, cache=FALSE, warning = FALSE)
+```
+
+```{r, echo=TRUE}
+ruta.proyecto <- dirname(rstudioapi::getSourceEditorContext()$path)
+setwd(ruta.proyecto)
+```
+
+# 1. Carga de paquetes {.unnumbered}
+
+Se instalan y cargan los paquetes que se utilizarán para la carga y manipulación de datos.
+
+```{r, echo=TRUE}
+#install.packages("dplyr")
+library(dplyr)  ## Manipulación de datos
+library(scales)
+#install.packages("kableExtra")
+library(kableExtra)
+library(ggplot2)
+```
+
+# 2. Carga de la base de datos
+
+```{r, echo=TRUE}
+### Carga de la base de datos
+
+## Carga de la base Latinobarómetro
+load("baselatin.rdata")
+```
+
+# 3. Selección de varibles
+
+Selección de país 1 ---> 170 = Colombia
+
+Selección de país 2 ---> 32 = Argentina
+
+1)  P1ST = En términos generales, ¿diría Ud. que está satisfecho con su vida?
+
+Categorías: 0. NS/NR
+
+1\. Muy satisfecho
+
+2\. Bastante satisfecho
+
+3\. No muy satisfecho
+
+4\. Para nada satisfecho
+
+2)  P57ST - ¿Cuál de los siguientes tipos de violencia es más frecuente donde Ud. vive?
+
+Categorías:
+
+0\. NS/ NR
+
+1\. Bullying/Acoso
+
+2\. Violencia intrafamiliar con los niños
+
+3\. Violencia intrafamiliar con mujeres
+
+4\. Violencia en las calles
+
+5\. Crimen organizado
+
+6\. Maras - Pandillas
+
+7\. Violencia de Estado, abuso de violencia policial
+
+8\. Violencia Verbal.
+
+3)  P11STGBS.A - En general, ¿Diría Ud. que está muy satisfecho, más bien satisfecho, no muy satisfecho o nada satisfecho con el funcionamiento de la democracia en (PAÍS)?
+
+Categorías: 0. No responde 1. Muy satisfecho 2. Más bien satisfecho 3. No muy satisfecho 4. Nada satisfecho 8. No sabe
+
+4)  P50ST - ¿Dónde suele Ud expresar sus opiniones sobre los problemas del país o Ud no suele hacerlo?
+
+<!-- -->
+
+0.  NS/NR
+1.  Redes sociales.
+2.  Manifestaciones/protesta
+3.  Entre amigos
+4.  En familia
+5.  No sueli hacerlo
+
+# 4. Introducción
+
+El presente informe realiza un análisis que compara la percepción de bienestar individual frente al entorno social y político en Colombia y Argentina. A través de cuatro variables clave (satisfacción vital, tipos de violencia, satisfacción democrática y espacios de expresión), se busca entender la desconexión existente entre la esfera privada y la pública. Mientras que la satisfacción con la vida personal muestra niveles aceptables en ambos países, el entorno se percibe como hostil debido a la persistencia de la violencia callejera y un profundo desencanto con el funcionamiento de la democracia. Este estudio permite identificar cómo el contexto de inseguridad y la falta de canales de expresión efectivos moldean la relación del ciudadano con su país.
+
+# 5. Pregunta o hipótesis
+
+¿En qué medida la percepción de inseguridad ciudadana (violencia en las calles) y la falta de espacios de expresión pública influyen en el alto nivel de insatisfacción con la democracia en Colombia y Argentina, a pesar de que los ciudadanos reportan niveles positivos de satisfacción con su vida personal?
+
+Hipótesis: "Existe una correlación negativa entre la percepción de violencia y la satisfacción democrática: a mayor percepción de violencia callejera y verbal, menor es la confianza en el sistema democrático. Asimismo, en Colombia, el alto porcentaje de ciudadanos que 'no suele expresar su opinión' actúa como un factor que profundiza la insatisfacción política en comparación con Argentina".
+
+# 6. Justificación
+
+La relevancia de este estudio radica en la necesidad de comprender las causas del malestar social en la región. Es paradójico que un ciudadano pueda sentirse "satisfecho con su vida" (esfera privada) pero radicalmente "insatisfecho con la democracia" (esfera pública).
+
+1.  Dimensión Social: Identificar que la violencia callejera y verbal son las principales preocupaciones permite priorizar políticas de seguridad ciudadana.
+
+2.  Dimensión Política: El alto escepticismo democrático (especialmente en Colombia, donde supera el 80%) advierte sobre una posible crisis de legitimidad institucional.
+
+3.  Dimensión Comunicativa: Analizar por qué más del 50% de los colombianos prefiere callar sus opiniones frente al 24.9% de los argentinos es crucial para fortalecer la cultura participativa y el tejido social.
+
+Este análisis comparativo proporciona una base de datos diagnóstica para entender si el problema de la democracia es de gestión (resultados en seguridad) o de representación (falta de espacios de diálogo).
+
+# 7. Desarrollo - Análisis exploratorio
+
+### 7.1.1 Revisar estructura del dataset
+
+```{r, echo=FALSE, results='hide'}
+glimpse(Latinobarometro_2023_Esp_v1_0)
+```
+
+### 7.1.2 Renombrar base de datos
+
+```{r, echo=TRUE}
+datos <- Latinobarometro_2023_Esp_v1_0
+```
+
+### 7.1.3 Explorar dataset
+
+```{r, echo=FALSE, results='hide'}
+summary(datos)
+```
+
+### 7.1.4 Filtrar país (Colombia)
+
+```{r, echo=TRUE}
+latam <- datos %>%
+  filter(idenpa %in% c(170, 32)) %>%
+  mutate(
+    pais = case_when(
+      idenpa == 170 ~ "Colombia",
+      idenpa == 32 ~ "Argentina"
+    )
+  )
+```
+
+## 7.2 Tabla 1: Satisfacción con la vida en Colombia
+
+```{r}
+tabla_vida <- latam %>%
+  filter(P1ST %in% c(1,2,3,4)) %>%
+  group_by(pais, P1ST) %>%
+  summarise(total = n(), .groups = "drop") %>%
+  group_by(pais) %>%
+  mutate(porcentaje = total / sum(total) * 100) %>%
+  ungroup()
+
+tabla_vida <- tabla_vida %>%
+  mutate(
+    P1ST = recode(P1ST,
+      "1" = "Muy satisfecho",
+      "2" = "Bastante satisfecho",
+      "3" = "No muy satisfecho",
+      "4" = "Para nada satisfecho"
+    )
+  )
+
+tabla_vida %>%
+  kable(
+    caption = "Tabla 1. Satisfacción con la vida en Colombia y Argentina",
+    digits = 2,
+    col.names = c("País","Nivel de satisfacción","Total","Porcentaje (%)"),
+    format = "html"
+  ) %>%
+  kable_styling(full_width = FALSE) %>%
+  row_spec(0, background = "pink", color = "purple", bold = TRUE)
+```
+
+## 7.2.1 Gráfico 1: Satisfacción con la vida
+
+```{r}
+ggplot(tabla_vida, aes(x = P1ST, y = porcentaje, fill = pais)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Gráfico 1- Satisfacción con la vida: Colombia vs Argentina",
+    x = "Nivel de satisfacción",
+    y = "Porcentaje"
+  ) +
+  scale_fill_manual(values = c("Colombia" = "#f48fb1", "Argentina" = "#8e44ad")) +
+  scale_y_continuous(labels = percent_format(scale = 1)) +
+  theme_minimal()
+```
+
+### 7.2.3 Interpretación:
+
+Al analizar la tabla sobre satisfacción con la vida, se observa que tanto en Argentina como en Colombia predomina una percepción positiva, aunque con matices distintos en la intensidad. En Colombia, existe un optimismo más marcado, ya que el 51.05% de los encuestados afirma estar "muy satisfecho", superando significativamente al 24.29% de los argentinos en esa misma categoría. Por su parte, la mayoría de los consultados en Argentina se inclina por un nivel moderado de bienestar ("bastante satisfecho" con un 53.92%). En ambos países, los niveles de insatisfacción total ("para nada satisfecho") son notablemente bajos, manteniéndose por debajo del 4%.
+
+## 7.3 Tabla 2: Tipo de violencia más frecuente
+
+```{r}
+tabla_violencia <- latam %>%
+  group_by(pais) %>%
+  summarise(
+    Bullying = sum(P57ST.A == 1, na.rm = TRUE),
+    Violencia_niños = sum(P57ST.B == 1, na.rm = TRUE),
+    Violencia_mujeres = sum(P57ST.C == 1, na.rm = TRUE),
+    Violencia_calles = sum(P57ST.D == 1, na.rm = TRUE),
+    Crimen_organizado = sum(P57ST.E == 1, na.rm = TRUE),
+    Pandillas = sum(P57ST.F == 1, na.rm = TRUE),
+    Violencia_estado = sum(P57ST.G == 1, na.rm = TRUE),
+    Violencia_verbal = sum(P57ST.H == 1, na.rm = TRUE)
+  )
+tabla_violencia <- tabla_violencia %>%
+  tidyr::pivot_longer(
+    cols = -pais,
+    names_to = "Tipo_de_violencia",
+    values_to = "Total"
+  ) %>%
+  group_by(pais) %>%
+  mutate(
+    porcentaje = Total / sum(Total) * 100
+  )
+tabla_violencia %>%
+  kable(
+    caption = "Tabla 2. Tipos de violencia percibida en Colombia y Argentina",
+    digits = 2,
+    col.names = c("País", "Tipo de violencia", "Total", "Porcentaje (%)"),
+    format = "html"
+  ) %>%
+  kable_styling(full_width = FALSE) %>%
+  row_spec(0,
+           background = "#F4C2C2",
+           color = "purple",
+           bold = TRUE)
+```
+
+## 7.3.1 Gráfico 2: Tipo de violencia
+
+```{r}
+ggplot(tabla_violencia, aes(x = Tipo_de_violencia, y = porcentaje, fill = pais)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Tipos de violencia percibidos: Colombia vs Argentina",
+    x = "Tipo de violencia",
+    y = "Porcentaje"
+  ) +
+  scale_fill_manual(values = c("Colombia" = "#f48fb1", "Argentina" = "#8e44ad")) +
+  scale_y_continuous(labels = percent_format(scale = 1)) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+### 7.3.2 Interpretación:
+
+Al analizar los datos sobre la percepción de violencia, se evidencia una estructura de preocupaciones muy similar en ambos países, donde la violencia en las calles y la violencia verbal encabezan la lista. En Argentina, la inseguridad callejera es el factor más crítico, alcanzando un 25.55%, seguida por la violencia verbal con un 19.75%.
+
+Colombia presenta una tendencia casi idéntica, aunque con cifras ligeramente más bajas en estos rubros (20.65% y 18.78% respectivamente), pero con una percepción superior en cuanto a crimen organizado (10.82%) y pandillas (9.97%) en comparación con su par rioplatense. En ambos casos, es notable que la violencia dirigida hacia mujeres y niños mantiene cifras de dos dígitos, lo que subraya una preocupación persistente por la integridad en el ámbito social y familiar en la región.
+
+## 7.4 Tabla 3: Satisfacción con la democracia en Colombia
+
+```{r}
+tabla_demo <- latam %>%
+  filter(P11STGBS.A %in% c(1,2,3,4)) %>%
+  group_by(pais, P11STGBS.A) %>%
+  summarise(
+    total = n(),
+    .groups = "drop"
+  ) %>%
+  group_by(pais) %>%
+  mutate(
+    porcentaje = total / sum(total) * 100
+  ) %>%
+  ungroup()
+tabla_demo <- tabla_demo %>%
+  mutate(
+    P11STGBS.A = recode(P11STGBS.A,
+      "1" = "Muy satisfecho",
+      "2" = "Más bien satisfecho",
+      "3" = "No muy satisfecho",
+      "4" = "Nada satisfecho"
+    )
+  )
+tabla_demo %>%
+  kable(
+    caption = "Tabla 3. Satisfacción con la democracia en Colombia y Argentina",
+    digits = 2,
+    col.names = c("País", "Nivel de satisfacción", "Total", "Porcentaje (%)"),
+    format = "html"
+  ) %>%
+  kable_styling(full_width = FALSE) %>%
+  row_spec(0,
+           background = "#E6B3FF",
+           color = "purple",
+           bold = TRUE)
+```
+
+## 7.4.1 Gráfico 3: Satisfacción con la democracia
+
+```{r}
+ggplot(tabla_demo, aes(x = P11STGBS.A, y = porcentaje, fill = P11STGBS.A)) +
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Satisfacción con el funcionamiento de la democracia",
+    x = "Nivel de satisfacción",
+    y = "Porcentaje"
+  ) +
+  scale_fill_manual(values = c("#f48fb1", "#c39bd3", "#8e44ad", "#f8c8dc")) +
+  scale_y_continuous(labels = percent_format(scale = 1)) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(face = "bold", size = 14)
+  )
+```
+
+### 7.4.2 Interpretación:
+
+A diferencia de los resultados de satisfacción con la vida personal, la percepción sobre la democracia en ambos países revela un profundo descontento social. En Colombia, la situación es especialmente crítica: el 83.43% de la población se ubica en el espectro negativo ("no muy satisfecho" o "nada satisfecho"), con casi un tercio de los encuestados manifestando un rechazo total al sistema.
+
+Argentina, aunque presenta una estructura similar de insatisfacción, muestra un matiz algo más moderado; allí, el grupo predominante es el de los "no muy satisfechos" (42.33%), pero logra conservar un 30.07% de ciudadanos "más bien satisfechos", una cifra que triplica el optimismo democrático encontrado en Colombia (10.73%). En resumen, los datos sugieren que, aunque los ciudadanos de ambos países pueden estar satisfechos con sus vidas privadas, mantienen una visión mayoritariamente escéptica y crítica hacia el funcionamiento de sus instituciones políticas.
+
+## 7.5 Tabla 4: Espacios donde se expresan opiniones (P5OST)
+
+```{r}
+tabla_opinion <- latam %>%
+  filter(P50ST %in% c(1,2,3,4,5)) %>%
+  group_by(pais, P50ST) %>%
+  summarise(
+    total = n(),
+    .groups = "drop"
+  ) %>%
+  group_by(pais) %>%
+  mutate(
+    porcentaje = total / sum(total) * 100
+  )
+
+# Etiquetas de categorías
+tabla_opinion <- tabla_opinion %>%
+  mutate(
+    P50ST = recode(P50ST,
+      "1" = "Redes sociales",
+      "2" = "Manifestaciones o protestas",
+      "3" = "Entre amigos",
+      "4" = "En familia",
+      "5" = "No suele hacerlo"
+    )
+  )
+tabla_opinion %>%
+  kable(
+    caption = "Tabla 4. Espacios donde se expresan opiniones sobre los problemas del país: Colombia vs Argentina",
+    digits = 2,
+    col.names = c("País", "Espacio de expresión", "Total", "Porcentaje (%)"),
+    format = "html"
+  ) %>%
+  kable_styling(full_width = FALSE) %>%
+  row_spec(
+    0,
+    background = "#F4C2C2",
+    color = "purple",
+    bold = TRUE
+  )
+```
+
+### 7.5.1 Gráfico 4: Espacios donde se expresan opiniones
+
+```{r}
+ggplot(tabla_opinion, aes(x = P50ST, y = porcentaje, fill = pais)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Espacios donde los ciudadanos expresan sus opiniones",
+    subtitle = "Comparación Colombia vs Argentina",
+    x = "Espacio de expresión",
+    y = "Porcentaje",
+    fill = "País"
+  ) +
+  scale_fill_manual(values = c("#f48fb1","#8e44ad")) +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    axis.text.x = element_text(angle = 25, hjust = 1)
+  )
+```
+
+### 7.5.2 Interpretación:
+
+Los datos sobre los espacios de expresión revelan una marcada diferencia en la cultura de participación entre ambos países. Mientras que en Argentina la mayoría de la población canaliza sus opiniones a través de círculos íntimos como la familia (32.83%) y los amigos (29.30%), en Colombia predomina un silencio ciudadano preocupante: más de la mitad de los encuestados (53.98%) afirma que no suele expresar sus opiniones sobre los problemas del país.
+
+Este fenómeno sugiere un retraimiento del debate público en Colombia, donde los espacios tradicionales y digitales tienen una relevancia mínima. Por el contrario, los argentinos muestran una mayor disposición al diálogo privado, aunque en ambos casos la participación en manifestaciones o protestas resulta ser el mecanismo menos utilizado, con cifras que no superan el 3.5%.
+
+# 8. Conclusiones:
+
+1.  Disonancia entre el bienestar privado y el entorno público: Se evidencia una clara paradoja regional: los ciudadanos logran mantener niveles considerables de satisfacción personal (especialmente en Colombia, con un 51.05% "muy satisfecho") a pesar de vivir en entornos que perciben como democráticamente deficientes y violentos. Esto sugiere que el bienestar individual en estos países se construye de forma resiliente, desconectado del éxito de las instituciones estatales.
+
+2.  La crisis de legitimidad democrática: La insatisfacción con la democracia es el punto de mayor convergencia negativa. Colombia presenta una situación de alarma con un 83.43% de descontento, mientras que Argentina, aunque menos crítica, también mantiene una mayoría insatisfecha (61.92%). Estos datos confirman que el sistema político no está cumpliendo con las expectativas de la población, lo que pone en riesgo la cohesión social a largo plazo.
+
+3.  Prevalencia de la violencia cotidiana: En ambas naciones, la violencia en las calles y la violencia verbal son las principales amenazas percibidas. El hecho de que la inseguridad urbana sea el factor dominante (superando el 20% en ambos casos) explica, en parte, el rechazo a la gestión democrática, ya que el Estado no garantiza la seguridad básica, desplazando preocupaciones como el crimen organizado a un segundo plano.
+
+4.  Retraimiento y silencio ciudadano: Existe una diferencia cultural profunda en la expresión de opiniones. Mientras que el argentino tiende a socializar sus problemas en el ámbito privado (familia y amigos), el colombiano opta mayoritariamente por el silencio (53.98% no suele expresarse). Esta "espiral del silencio" en Colombia, sumada a su baja satisfacción democrática, podría indicar un debilitamiento del tejido social y una falta de confianza en que la opinión ciudadana pueda generar cambios reales.
+
+5.  Ineficacia de los nuevos canales de participación: A pesar del auge digital, las redes sociales y las manifestaciones registran porcentajes de uso muy bajos para la expresión de problemas nacionales (menos del 10% y 4% respectivamente). Esto demuestra que ni las calles ni las plataformas digitales están logrando consolidarse como espacios de deliberación efectiva para la mayoría de la población en estos dos países sudamericanos.

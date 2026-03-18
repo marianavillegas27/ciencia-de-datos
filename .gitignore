@@ -1,0 +1,7 @@
+.venv/
+baselatin.rdata
+baselatin.csv
+.DS_Store
+__pycache__/
+.Rhistory
+.RData
